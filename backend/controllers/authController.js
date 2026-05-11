@@ -47,5 +47,19 @@ const login = async (req, res) => {
         res.status(500).json({ message: 'Error en el servidor' });
     }
 };
+// const getMe = async (req, res) => {
+//     try {
+//         // El usuario ya lo tenemos en req.user (desde middleware de autenticación)
+//         const user = await User.findById(req.user.id);
+//         if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+//         res.json({
+//             id: user.id,
+//             name: user.name,
+//             email: user.email
+//         });
+//     } catch (error) {
+//         res.status(500).json({ message: 'Error en el servidor' });
+//     }
+// };
 
 module.exports = { login };

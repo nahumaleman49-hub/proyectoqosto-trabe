@@ -2,7 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
-
+const clienteRoutes = require('./routes/clienteRoutes');
+const proyectoRoutes = require('./routes/proyectoRoutes');
 const app = express();
 
 // Middlewares
@@ -11,6 +12,8 @@ app.use(express.json());
 
 // Rutas
 app.use('/api', authRoutes);
+app.use('/api/clientes', clienteRoutes);
+app.use('/api/proyectos', proyectoRoutes);
 
 // Manejador de errores global (opcional)
 app.use((err, req, res, next) => {

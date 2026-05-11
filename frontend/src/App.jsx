@@ -1,121 +1,80 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './components/Login';
+import Home from './components/Home';
+import Clientes from './components/Clientes';
+import ClientesForm from './components/ClientesForm';
+import Proyectos from './components/Proyectos';
+import ProyectosForm from './components/ProyectosForm';
+
+// Componentes temporales para otras páginas
+const Perfil = () => <div className="p-8 text-white">Perfil - En construcción</div>;
+const Cotizaciones = () => <div className="p-8 text-white">Cotizaciones - En construcción</div>;
+const Proveedores = () => <div className="p-8 text-white">Proveedores - En construcción</div>;
+const Materiales = () => <div className="p-8 text-white">Materiales - En construcción</div>;
+const ManoDeObra = () => <div className="p-8 text-white">Mano de Obra - En construcción</div>;
+
+// Ruta protegida
+const PrivateRoute = ({ children }) => {
+    const token = localStorage.getItem('token');
+    return token ? children : <Navigate to="/login" />;
+};
 
 function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    return (
+        <BrowserRouter>
+            <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/clientes" element={<PrivateRoute><Clientes /></PrivateRoute>} />
+                <Route path="/clientes/nuevo" element={<PrivateRoute><ClientesForm /></PrivateRoute>} />
+                <Route path="/clientes/:id/editar" element={<PrivateRoute><ClientesForm /></PrivateRoute>} />
+                <Route path="/proyectos" element={<PrivateRoute><Proyectos /></PrivateRoute>} />
+                <Route path="/proyectos/nuevo" element={<PrivateRoute><ProyectosForm /></PrivateRoute>} />
+                <Route path="/proyectos/:id/editar" element={<PrivateRoute><ProyectosForm /></PrivateRoute>} />
+                <Route path="/home" element={
+                    <PrivateRoute>
+                        <Home />
+                    </PrivateRoute>
+                } />
+                <Route path="/perfil" element={
+                    <PrivateRoute>
+                        <Perfil />
+                    </PrivateRoute>
+                } />
+                <Route path="/cotizaciones" element={
+                    <PrivateRoute>
+                        <Cotizaciones />
+                    </PrivateRoute>
+                } />
+                <Route path="/proveedores" element={
+                    <PrivateRoute>
+                        <Proveedores />
+                    </PrivateRoute>
+                } />
+                <Route path="/materiales" element={
+                    <PrivateRoute>
+                        <Materiales />
+                    </PrivateRoute>
+                } />
+                <Route path="/mano-de-obra" element={
+                    <PrivateRoute>
+                        <ManoDeObra />
+                    </PrivateRoute>
+                } />
+                <Route path="/clientes" element={
+                    <PrivateRoute>
+                        <Clientes />
+                    </PrivateRoute>
+                } />
+                <Route path="/proyectos" element={
+                    <PrivateRoute>
+                        <Proyectos />
+                    </PrivateRoute>
+                } />
+                <Route path="/" element={<Navigate to="/home" />} />
+                <Route path="*" element={<Navigate to="/home" />} />
+            </Routes>
+        </BrowserRouter>
+    );
 }
 
-export default App
+export default App;

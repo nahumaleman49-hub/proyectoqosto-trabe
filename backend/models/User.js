@@ -7,6 +7,11 @@ class User {
         if (rows.length === 0) return null;
         return rows[0];
     }
+    static async findById(id) {
+    const [rows] = await pool.query('SELECT id, name, email FROM users WHERE id = ?', [id]);
+    if (rows.length === 0) return null;
+    return rows[0];
+}
 
     static async verifyPassword(plainPassword, hashedPassword) {
         return bcrypt.compare(plainPassword, hashedPassword);
