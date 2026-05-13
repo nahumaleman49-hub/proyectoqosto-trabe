@@ -24,7 +24,7 @@ const login = async (req, res) => {
             return res.status(401).json({ message: 'Credenciales inválidas' });
         }
 
-        // Verificar contraseña (el hash de Laravel es compatible con bcrypt)
+        // Verificar contraseña (con el hash de laravel que tambien es compatible con bcrypt)
         const isValid = await User.verifyPassword(password, user.password);
         if (!isValid) {
             return res.status(401).json({ message: 'Credenciales inválidas' });

@@ -20,7 +20,7 @@ const Home = () => {
         { to: '/cotizaciones', icon: FileText, title: 'Cotizaciones', desc: 'Obtén estimados de proyectos', gradient: 'from-slate-700 to-slate-800' },
         { to: '/proveedores', icon: Package, title: 'Proveedores', desc: 'Encuentra socios confiables', gradient: 'from-slate-600 to-slate-700' },
         { to: '/materiales', icon: Box, title: 'Materiales', desc: 'Explora productos de calidad', gradient: 'from-slate-700 to-slate-800' },
-        { to: '/mano-de-obra', icon: Users, title: 'Mano de Obra', desc: 'Contrata trabajadores calificados', gradient: 'from-slate-600 to-slate-700' },
+        { to: '/servicios', icon: Briefcase, title: 'Mano de Obra', desc: 'Contrata trabajadores calificados', gradient: 'from-slate-700 to-slate-800' },
         { to: '/clientes', icon: Users, title: 'Clientes', desc: 'Administra tus clientes', gradient: 'from-slate-600 to-slate-700' },
         { to: '/proyectos', icon: Briefcase, title: 'Proyectos', desc: 'Administra tus proyectos', gradient: 'from-slate-700 to-slate-800' },
     ];
@@ -33,11 +33,11 @@ const Home = () => {
                     {/* Bloque de texto "TRABE INGENIERÍA INDUSTRIAL QUÍMICA CARACTERÍSTICAS" (puede ser logo) */}
                     <div className="text-left">
                         <p className="text-white text-sm font-mono tracking-wider leading-tight">
-                            TRABE<br />
+                            {/* TRABE<br />
                             INGENIERÍA<br />
                             INDUSTRIAL<br />
                             QUÍMICA<br />
-                            CARACTERÍSTICAS
+                            CARACTERÍSTICAS */}
                         </p>
                     </div>
                     <div className="flex gap-4">

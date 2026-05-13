@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { login } from '../services/api';
-import logo from '/images/logo.jpeg?url'; // Ajusta la ruta si no usas ?url, puedes importar así: import logo from '/images/logo.jpeg'
+import logo from '/images/logo.jpeg'; // Ajusta la ruta si no usas ?url, puedes importar así: import logo from '/images/logo.jpeg'
 
 const Login = () => {
     const [formData, setFormData] = useState({ name: '', password: '' });
