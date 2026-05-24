@@ -20,6 +20,7 @@ const CotizacionForm = () => {
     const [telefonoCliente, setTelefonoCliente] = useState('');
     const [emailCliente, setEmailCliente] = useState('');
     const [clientesList, setClientesList] = useState([]);
+    const [estado, setEstado] = useState(0); // 0 = Borrador por defecto
 
     // Materiales y servicios (items)
     const [materialesItems, setMaterialesItems] = useState([]);
@@ -54,6 +55,8 @@ const CotizacionForm = () => {
                 try {
                     const res = await api.get(`/cotizaciones/${id}`);
                     const data = res.data;
+                    if (data.estado !== undefined) {
+                        setEstado(data.estado);}
                     setNombreProyecto(data.proyecto_nombre);
                     setClienteId(data.cliente_id);
                     setTelefonoCliente(data.telefono || '');
@@ -115,14 +118,37 @@ const CotizacionForm = () => {
             setEmailCliente('');
         }
     }, [clienteId, clientesList]);
+    
 
-    // Funciones para manejar materiales
     const agregarMaterial = (data) => {
-    setMaterialesItems(prev => [...prev, { id_temp: Date.now(), ...data }]);
-    };
-    const actualizarMaterial = (index, data) => {
-        setMaterialesItems(prev => prev.map((item, i) => i === index ? { ...item, ...data } : item));
-    };
+    console.log("agregarMaterial ejecutándose con:", data);
+    setMaterialesItems(prev => {
+        const nuevo = [...prev, { id_temp: Date.now(), ...data }];
+        console.log("Nuevo estado materialesItems:", nuevo);
+        return nuevo;
+    });
+};
+
+const actualizarMaterial = (index, data) => {
+    console.log("actualizarMaterial ejecutándose, índice:", index, "data:", data);
+    setMaterialesItems(prev => {
+        const nuevo = prev.map((item, i) => i === index ? { ...item, ...data } : item);
+        console.log("Estado actualizado:", nuevo);
+        return nuevo;
+    });
+};
+
+//     const handleMaterialSave = useCallback((data) => {
+//     console.log("handleMaterialSave recibió:", data);
+//     if (modalMode === 'edit' && editingMaterial !== null) {
+//         actualizarMaterial(editingMaterial.idx, data);
+//     } else {
+//         agregarMaterial(data);
+//     }
+//     setModalMaterialOpen(false);
+//     setEditingMaterial(null);
+// }, [modalMode, editingMaterial, actualizarMaterial, agregarMaterial]);
+
     const eliminarMaterial = (index) => {
         if (window.confirm('¿Eliminar este material?')) {
             const nuevos = [...materialesItems];
@@ -164,44 +190,55 @@ const CotizacionForm = () => {
 
     const totals = calcularTotales();
 
-    
-
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
-        // Preparar JSON
-        const materiales_json = materialesItems.map(m => ({
-            abastecimiento_id: m.abastecimiento_id,
-            cantidad: m.cantidad
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    // 1. Limpiamos y aseguramos que los IDs sean enteros y no vayan vacíos
+    const materiales_json = materialesItems
+        .filter(m => m.abastecimiento_id) // Ignoramos si por error hay alguno vacío
+        .map(m => ({
+            abastecimiento_id: parseInt(m.abastecimiento_id, 10), // Forzamos a que sea Número Entero
+            cantidad: parseFloat(m.cantidad) || 0                 // Forzamos a que sea Decimal/Número
         }));
-        const servicios_json = serviciosItems.map(s => ({
-            mano_obra_id: s.mano_obra_id,
-            cantidad: s.cantidad,
-            precio_unitario: s.precio_unitario
+
+    const servicios_json = serviciosItems
+        .filter(s => s.mano_obra_id) // Ignoramos si por error hay alguno vacío
+        .map(s => ({
+            mano_obra_id: parseInt(s.mano_obra_id, 10),
+            cantidad: parseFloat(s.cantidad) || 0,
+            precio_unitario: parseFloat(s.precio_unitario) || 0
         }));
-        const payload = {
-            nombre_proyecto: nombreProyecto,
-            cliente_id: clienteId,
-            costo_equipo: costoEquipo,
-            gastos_generales: gastosGenerales,
-            margen_ganancia: margenGanancia,
-            materiales_json: JSON.stringify(materiales_json),
-            servicios_json: JSON.stringify(servicios_json)
-        };
-        try {
-            if (isEditing) {
-                await api.put(`/cotizaciones/${id}`, payload);
-            } else {
-                await api.post('/cotizaciones', payload);
-            }
-            navigate('/cotizaciones');
-        } catch (err) {
-            setError(err.response?.data?.message || 'Error al guardar cotización');
-        } finally {
-            setLoading(false);
-        }
+
+    // 2. Construimos el payload de forma segura
+    const payload = {
+        nombre_proyecto: nombreProyecto,
+        cliente_id: parseInt(clienteId, 10), // Aseguramos que sea entero para la BD
+        costo_equipo: parseFloat(costoEquipo) || 0,
+        gastos_generales: parseFloat(gastosGenerales) || 0,
+        margen_ganancia: parseFloat(margenGanancia) || 0,
+        estado: parseInt(estado, 10), 
+        materiales_json: JSON.stringify(materiales_json),
+        servicios_json: JSON.stringify(servicios_json)
     };
+
+    console.log("✈️ Payload exacto enviado al backend:", payload);
+
+    try {
+        if (isEditing) {
+            await api.put(`/cotizaciones/${id}`, payload);
+        } else {
+            await api.post('/cotizaciones', payload);
+        }
+        navigate('/cotizaciones');
+    } catch (err) {
+        console.error("❌ Error devuelto por el servidor:", err.response?.data);
+        setError(err.response?.data?.message || 'Error al guardar cotización');
+    } finally {
+        setLoading(false);
+    }
+};
 
     if (fetchLoading) return <div className="text-center py-20">Cargando...</div>;
 
@@ -248,6 +285,29 @@ const CotizacionForm = () => {
                             <div>
                                 <label className="block font-semibold mb-2">Correo electrónico</label>
                                 <input type="email" value={emailCliente} readOnly className="w-full border rounded-lg bg-gray-100 px-4 py-2" />
+                            </div>
+                        </div>
+                        {/* Estado de la Cotización */}
+                        <div className="bg-white rounded-2xl p-8 shadow-lg mb-6">
+                            <h2 className="text-2xl font-bold mb-4">Estado de la Cotización</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block font-semibold mb-2">Estado *</label>
+                                    <select 
+                                        value={estado} 
+                                        onChange={(e) => setEstado(parseInt(e.target.value))}
+                                        className="w-full border rounded-lg px-4 py-2"
+                                        required
+                                    >
+                                        <option value="0">📄 Borrador</option>
+                                        <option value="1">📨 Enviada</option>
+                                        <option value="2">✅ Aprobada</option>
+                                        <option value="3">❌ Rechazada</option>
+                                    </select>
+                                    <p className="text-xs text-slate-400 mt-1">
+                                        Selecciona el estado actual de esta cotización
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -353,15 +413,24 @@ const CotizacionForm = () => {
                 isOpen={modalMaterialOpen}
                 onClose={() => setModalMaterialOpen(false)}
                 onSave={(data) => {
-                    console.log("📦 Datos recibidos en onSave:", data);
+                    console.log("🚀 Inicio onSave en padre");
+                    console.log("modalMode:", modalMode);
+                    console.log("editingMaterial:", editingMaterial);
+                    console.log("data recibida:", data);
+                    
                     if (modalMode === 'edit' && editingMaterial !== null) {
+                        console.log("✏️ Editando material en índice", editingMaterial.idx);
                         actualizarMaterial(editingMaterial.idx, data);
                     } else {
+                        console.log("➕ Agregando nuevo material");
                         agregarMaterial(data);
-                    }
-                    console.log("Estado actualizado, cerrando modal...");
-                    setModalMaterialOpen(false);
-                    setEditingMaterial(null);
+                    }                
+                    console.log("🔄 Estado actualizado (debería cerrar modal)");
+                    setTimeout(() => {
+                        setModalMaterialOpen(false);
+                        setEditingMaterial(null);
+                    }, 50);
+                    console.log("🏁 Fin onSave");
                 }}
                 editingData={modalMode === 'edit' ? editingMaterial?.item : null}
             />

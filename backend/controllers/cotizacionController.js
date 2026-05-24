@@ -49,6 +49,7 @@ const store = async (req, res) => {
             costo_equipo,
             gastos_generales,
             margen_ganancia,
+            estado,
             materiales_json,
             servicios_json
         } = req.body;
@@ -82,10 +83,20 @@ const store = async (req, res) => {
 
         // Crear cotización
         const fecha = new Date();
+        // 5. Sanitizar el Estado: forzar un número válido (0 por defecto)
+        let estadoFinal = 0;
+        if (estado !== undefined && estado !== null) {
+            estadoFinal = parseInt(estado, 10);
+            if (isNaN(estadoFinal)) estadoFinal = 0;
+        } else if (existing.estado !== undefined && existing.estado !== null) {
+            estadoFinal = parseInt(existing.estado, 10);
+            if (isNaN(estadoFinal)) estadoFinal = 0;
+        }
+        // Si todo falla, ya está en 0
         const cotizacionId = await Cotizacion.create({
             fk_id_proyecto: proyectoFinalId,
             fecha: new Date(),
-            estado: 0,
+            estado: isNaN(estadoFinal) ? 0 : estadoFinal,
             total: 0,
             costo_equipo: parseFloat(costo_equipo) || 0,
             gastos_generales: parseFloat(gastos_generales) || 0,
@@ -130,9 +141,9 @@ const store = async (req, res) => {
         const margenPorcentaje = parseFloat(margen_ganancia) || 0;
         const conGastos = subtotalBase * (1 + gastosPorcentaje / 100);
         const totalFinal = conGastos * (1 + margenPorcentaje / 100);
-
+        console.log("📊 Valores a actualizar:", { id, totalFinal, estadoFinal, costo_equipo, gastos_generales, margen_ganancia });
         // Actualizar cotización y proyecto
-        await Cotizacion.update(cotizacionId, totalFinal, 0);
+        await Cotizacion.update(cotizacionId, totalFinal, estadoFinal);
         await Proyecto.updatePresupuesto(proyectoFinalId, totalFinal);
 
         await connection.commit();
@@ -163,6 +174,7 @@ const update = async (req, res) => {
             costo_equipo,
             gastos_generales,
             margen_ganancia,
+            estado,
             materiales_json,
             servicios_json
         } = req.body;
@@ -171,16 +183,21 @@ const update = async (req, res) => {
         if (usarProyectoExistente && proyecto_id) {
             proyectoFinalId = proyecto_id;
         } else {
-            // Si se cambia a nuevo proyecto, actualizar el proyecto existente (la cotización ya tiene uno)
-            // O crear uno nuevo y reemplazar? Según la lógica de Laravel, la cotización tiene un proyecto asociado.
-            // Aquí asumimos que se actualiza el proyecto asociado actual.
             if (nombre_proyecto && cliente_id) {
+            // Obtener el proyecto actual para preservar sus valores
+            const proyectoActual = await Proyecto.getById(existing.fk_id_proyecto);
+            if (proyectoActual) {
                 await Proyecto.update(existing.fk_id_proyecto, {
                     nombre: nombre_proyecto,
-                    fk_id_cliente: cliente_id
+                    fk_id_cliente: cliente_id,
+                    estado: proyectoActual.estado,       // preservar estado actual
+                    fecha_ini: proyectoActual.fecha_ini,
+                    fecha_fin: proyectoActual.fecha_fin,
+                    presupuesto: proyectoActual.presupuesto
                 });
-                proyectoFinalId = existing.fk_id_proyecto;
-            } else {
+            }
+            proyectoFinalId = existing.fk_id_proyecto;
+        } else {
                 proyectoFinalId = existing.fk_id_proyecto;
             }
         }
@@ -189,7 +206,7 @@ const update = async (req, res) => {
         await DetalleMaterial.deleteByCotizacion(id);
         await DetalleServicio.deleteByCotizacion(id);
 
-        // Recalcular totales
+        // Recalcular totales (Materiales)
         const materiales = JSON.parse(materiales_json || '[]');
         let totalMateriales = 0;
         for (const mat of materiales) {
@@ -200,6 +217,7 @@ const update = async (req, res) => {
             }
         }
 
+        // Recalcular totales (Servicios)
         const servicios = JSON.parse(servicios_json || '[]');
         let totalServicios = 0;
         for (const serv of servicios) {
@@ -210,19 +228,42 @@ const update = async (req, res) => {
             }
         }
 
+        // Calcular total final
         const subtotalBase = totalMateriales + totalServicios + (parseFloat(costo_equipo) || 0);
         const gastosPorcentaje = parseFloat(gastos_generales) || 0;
         const margenPorcentaje = parseFloat(margen_ganancia) || 0;
         const conGastos = subtotalBase * (1 + gastosPorcentaje / 100);
         const totalFinal = conGastos * (1 + margenPorcentaje / 100);
-        await Cotizacion.update(cotizacionId, totalFinal, 0, costo_equipo, gastos_generales, margen_ganancia);
+
+        // Sanitizar estado (forzar número, nunca null)
+        let estadoFinal = 0;
+        if (estado !== undefined && estado !== null) {
+            estadoFinal = parseInt(estado, 10);
+            if (isNaN(estadoFinal)) estadoFinal = 0;
+        } else if (existing.estado !== undefined && existing.estado !== null) {
+            estadoFinal = parseInt(existing.estado, 10);
+            if (isNaN(estadoFinal)) estadoFinal = 0;
+        }
+
+        console.log("📊 Actualizando cotización:", { id, totalFinal, estadoFinal, costo_equipo, gastos_generales, margen_ganancia });
+        console.log("📊 Valores a actualizar:", { id, totalFinal, estadoFinal, costo_equipo, gastos_generales, margen_ganancia });
+        // Actualizar cotización
+        await Cotizacion.update(
+            id,
+            totalFinal,
+            estadoFinal,
+            parseFloat(costo_equipo) || 0,
+            parseFloat(gastos_generales) || 0,
+            parseFloat(margen_ganancia) || 0
+        );
+        
         await Proyecto.updatePresupuesto(proyectoFinalId, totalFinal);
 
         await connection.commit();
-        res.json({ message: 'Cotización actualizada' });
+        res.json({ message: 'Cotización actualizada con éxito' });
     } catch (error) {
         await connection.rollback();
-        console.error(error);
+        console.error("Error en la actualización:", error);
         res.status(500).json({ message: error.message || 'Error al actualizar cotización' });
     } finally {
         connection.release();

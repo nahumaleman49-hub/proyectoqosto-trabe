@@ -1,8 +1,10 @@
 import { useState } from 'react';
+//import { useNavigate } from 'react-router-dom';
 import { login } from '../services/api';
-import logo from '/images/logo.jpeg'; // Ajusta la ruta si no usas ?url, puedes importar así: import logo from '/images/logo.jpeg'
+import logo from '/images/logo.jpeg';
 
 const Login = () => {
+    //const navigate = useNavigate();
     const [formData, setFormData] = useState({ name: '', password: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -13,29 +15,33 @@ const Login = () => {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
-
-        try {
-            const { token, user } = await login(formData.name, formData.password);
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
-            window.location.href = '/home';
-        } catch (err) {
-            const msg = err.response?.data?.message || 'Error al iniciar sesión';
-            setError(msg);
-        } finally {
-            setLoading(false);
-        }
-    };
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    //alert('1. Inicio handleSubmit');
+    try {
+        //alert('2. Antes de login');
+        const response = await login(formData.name, formData.password);
+        //alert('3. Después de login: ' + JSON.stringify(response));
+        const { token, user } = response;
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        //alert('4. Redirigiendo a: ' + (user.role === 'admin' ? '/home' : '/dashboard'));
+        window.location.href = user.role === 'admin' ? '/home' : '/dashboard';
+    } catch (err) {
+        alert('Error: ' + err.message);
+        setError(err.response?.data?.message || 'Error');
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4">
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
                     <img src={logo} alt="Trabe Ingeniería" className="w-auto h-40 mx-auto mb-6" />
-                    <h1 className="text-5xl font-bold text-white mb-2">QOSTO</h1>
+                    <h1 className="text-5xl font-bold text-white mb-2">QOSTO Test</h1>
                     <p className="text-slate-300 text-lg">Gestión de Proyectos de Construcción</p>
                 </div>
 
@@ -75,7 +81,8 @@ const Login = () => {
                         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
                         <button
-                            type="submit"
+                            type="button"
+                            onClick={handleSubmit}
                             disabled={loading}
                             className="w-full bg-gradient-to-r from-slate-700 to-slate-800 text-white py-3 rounded-lg hover:shadow-lg transition-shadow font-semibold text-lg disabled:opacity-50"
                         >

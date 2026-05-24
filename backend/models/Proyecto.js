@@ -1,7 +1,6 @@
 const pool = require('../config/db');
 
 class Proyecto {
-    // Obtener todos los proyectos con nombre del cliente (soft delete)
     static async getAll(search = null) {
         let query = `
             SELECT p.*, c.nombre as cliente_nombre
@@ -19,7 +18,6 @@ class Proyecto {
         return rows;
     }
 
-    // Obtener un proyecto por ID (con datos del cliente)
     static async getById(id) {
         const [rows] = await pool.query(`
             SELECT p.*, c.nombre as cliente_nombre, c.ID_cliente as cliente_id
@@ -30,7 +28,6 @@ class Proyecto {
         return rows[0] || null;
     }
 
-    // Crear proyecto
     static async create(data) {
         const { nombre, fk_id_cliente, estado, fecha_ini, fecha_fin, presupuesto } = data;
         const [result] = await pool.query(
@@ -41,18 +38,29 @@ class Proyecto {
         return result.insertId;
     }
 
-    // Actualizar proyecto
     static async update(id, data) {
-        const { nombre, fk_id_cliente, estado, fecha_ini, fecha_fin, presupuesto } = data;
-        const [result] = await pool.query(
-            `UPDATE proyecto SET nombre=?, fk_id_cliente=?, estado=?, fecha_ini=?, fecha_fin=?, presupuesto=?
-             WHERE ID_proyecto = ? AND deleted_at IS NULL`,
-            [nombre, fk_id_cliente, estado, fecha_ini, fecha_fin || null, presupuesto, id]
-        );
+        const fields = [];
+        const values = [];
+        for (const [key, value] of Object.entries(data)) {
+            if (value !== undefined) {
+                fields.push(`${key} = ?`);
+                values.push(value);
+            }
+        }
+        if (fields.length === 0) return false;
+        values.push(id);
+        const query = `UPDATE proyecto SET ${fields.join(', ')} WHERE ID_proyecto = ? AND deleted_at IS NULL`;
+        const [result] = await pool.query(query, values);
         return result.affectedRows > 0;
     }
 
-    // Soft delete
+    static async updatePresupuesto(id, presupuesto) {
+        const [result] = await pool.query(`
+            UPDATE proyecto SET presupuesto = ? WHERE ID_proyecto = ? AND deleted_at IS NULL
+        `, [presupuesto, id]);
+        return result.affectedRows > 0;
+    }
+
     static async delete(id) {
         const [result] = await pool.query(
             `UPDATE proyecto SET deleted_at = NOW() WHERE ID_proyecto = ? AND deleted_at IS NULL`,

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FileText, Plus, Eye, Edit, FileDown, ArrowLeft, Calendar, DollarSign, ClipboardList } from 'lucide-react';
 import api from '../services/api';
+import { isAdmin } from '../utils/auth';
 
 const Cotizaciones = () => {
     const [cotizaciones, setCotizaciones] = useState([]);
@@ -41,6 +42,8 @@ const Cotizaciones = () => {
         return <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${clases[estado] || clases[0]}`}>{estados[estado] || 'Desconocido'}</span>;
     };
 
+    const backRoute = isAdmin() ? '/home' : '/dashboard';
+
     if (loading) return <div className="text-center py-20">Cargando cotizaciones...</div>;
 
     return (
@@ -55,8 +58,9 @@ const Cotizaciones = () => {
                 </div>
             </div>
             <div className="container mx-auto px-4 py-8">
-                <Link to="/home" className="inline-flex items-center text-slate-600 hover:text-slate-800 mb-8">
-                    <ArrowLeft size={20} className="mr-2" /> Volver al Inicio
+                <Link to={backRoute} className="inline-flex items-center text-slate-600 hover:text-slate-800 mb-8">
+                    <ArrowLeft size={20} className="mr-2" /> 
+                    Volver {isAdmin() ? 'al Inicio' : 'al Dashboard'}
                 </Link>
                 <div className="bg-white rounded-2xl p-8 shadow-lg mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

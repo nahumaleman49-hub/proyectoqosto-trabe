@@ -8,6 +8,7 @@ const proveedorRoutes = require('./routes/proveedorRoutes');
 const materialRoutes = require('./routes/materialRoutes');
 const servicioRoutes = require('./routes/servicioRoutes');
 const cotizacionRoutes = require('./routes/cotizacionRoutes');
+const userRoutes = require('./routes/userRoutes');
 const app = express();
 
 // Middlewares
@@ -22,6 +23,7 @@ app.use('/api/proveedores', proveedorRoutes);
 app.use('/api/materiales', materialRoutes);
 app.use('/api/servicios', servicioRoutes);
 app.use('/api/cotizaciones', cotizacionRoutes);
+app.use('/api/users', userRoutes);
 
 // Manejador de errores global (opcional)
 app.use((err, req, res, next) => {

@@ -25,6 +25,7 @@ const ModalMaterial = ({ isOpen, onClose, onSave, editingData }) => {
                 } catch (err) { console.error(err); }
             };
             fetchCategorias();
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setInitialized(true);
         }
         if (!isOpen) setInitialized(false);
@@ -56,6 +57,7 @@ const ModalMaterial = ({ isOpen, onClose, onSave, editingData }) => {
     // Precargar datos de edición sin causar cascada
     useEffect(() => {
         if (isOpen && editingData) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSelectedCategoria(editingData.categoria_id || '');
             setSelectedMaterial(editingData.material_id || '');
             setSelectedProveedor(editingData.abastecimiento_id || '');
@@ -91,26 +93,26 @@ const ModalMaterial = ({ isOpen, onClose, onSave, editingData }) => {
             return;
         }
         const selectedProv = proveedores.find(p => p.ID_prod == selectedProveedor);
-        if (!selectedProv) return;
         const material = materiales.find(m => m.id == selectedMaterial);
         const categoria = categorias.find(c => c.id == selectedCategoria);
         const data = {
-            abastecimiento_id: selectedProveedor,
-            material_id: selectedMaterial,
-            proveedor_id: selectedProv.id,
-            cantidad: cantidad,
-            precio_unitario: selectedProv.precio,
-            material_nombre: material?.text || 'Material',
-            proveedor_nombre: selectedProv.text,
-            unidad: material?.medidas || '',
-            categoria_id: selectedCategoria,
-            categoria_nombre: categoria?.text || ''
+        abastecimiento_id: selectedProveedor,
+        material_id: selectedMaterial,
+        // Usamos cortocircuito para evitar el error de "undefined"
+        proveedor_id: selectedProv ? selectedProv.id : (editingData?.proveedor_id || ''),
+        cantidad: cantidad,
+        precio_unitario: selectedProv ? selectedProv.precio : (editingData?.precio_unitario || 0),
+        material_nombre: material?.text || editingData?.material_nombre || 'Material',
+        proveedor_nombre: selectedProv?.text || editingData?.proveedor_nombre || 'Proveedor',
+        unidad: material?.medidas || editingData?.unidad || '',
+        categoria_id: selectedCategoria,
+        categoria_nombre: categoria?.text || editingData?.categoria_nombre || ''
         };
-        onSave(data);  // 👈 debe llamar a la función del padre
+        onSave(data);  // debe llamar a la función del padre
     };
 
     if (!isOpen) return null;
-
+console.log("ModalMaterial recibió onSave:", typeof onSave);
     return ReactDOM.createPortal(
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
             <div className="bg-white rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
@@ -148,21 +150,7 @@ const ModalMaterial = ({ isOpen, onClose, onSave, editingData }) => {
                     {/* // Reemplaza el botón actual con este código */}
                     <button
                         type="button"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            console.log("👉 Botón Guardar clickeado");
-                            if (!onSave) {
-                                console.error("❌ onSave no está definida");
-                                return;
-                            }
-                            if (!selectedProveedor || cantidad <= 0) {
-                                alert('Seleccione proveedor y cantidad válida');
-                                return;
-                            }
-                            console.log("✅ Validación pasada, llamando a onSave...");
-                            handleSave(); // o copia directamente la lógica de handleSave aquí para evitar errores de función
-                        }}
+                        onClick={handleSave}
                         className="w-full bg-slate-700 text-white py-2 rounded-lg mt-2">
                             Guardar
                         </button>

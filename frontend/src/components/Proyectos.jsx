@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Briefcase, Search, Plus, Edit, Trash2, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
 import api from '../services/api';
+import { isAdmin } from '../utils/auth';
 
 const Proyectos = () => {
     const [proyectos, setProyectos] = useState([]);
@@ -27,6 +28,12 @@ const Proyectos = () => {
         }
     };
 
+    const [esAdmin, setEsAdmin] = useState(false);
+    useEffect(() => {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        setEsAdmin(user.role === 'admin');
+    }, []);
+
     const handleDelete = async (id, nombre) => {
         if (!confirm(`¿Eliminar el proyecto "${nombre}"?`)) return;
         try {
@@ -47,6 +54,8 @@ const Proyectos = () => {
         return date.toLocaleDateString('es-MX');
     };
 
+    const backRoute = isAdmin() ? '/home' : '/dashboard';
+
     if (loading) return <div className="text-center py-20">Cargando proyectos...</div>;
 
     return (
@@ -63,9 +72,9 @@ const Proyectos = () => {
             </div>
 
             <div className="container mx-auto px-4 py-8">
-                <Link to="/home" className="inline-flex items-center text-slate-600 hover:text-slate-800 transition-colors mb-8">
+                <Link to={backRoute} className="inline-flex items-center text-slate-600 hover:text-slate-800 transition-colors mb-8">
                     <ArrowLeft size={20} className="mr-2" />
-                    Volver al Inicio
+                    Volver {isAdmin() ? 'al Inicio' : 'al Dashboard'}
                 </Link>
 
                 {success && (
@@ -169,6 +178,7 @@ const Proyectos = () => {
                                                     >
                                                         <Edit size={20} />
                                                     </Link>
+                                                    {esAdmin &&(
                                                     <button
                                                         onClick={() => handleDelete(proy.ID_proyecto, proy.nombre)}
                                                         className="text-red-500 hover:text-red-700 transition-colors"
@@ -176,6 +186,7 @@ const Proyectos = () => {
                                                     >
                                                         <Trash2 size={20} />
                                                     </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>

@@ -68,11 +68,15 @@ class Cotizacion {
 
     // update
     static async update(id, total, estado, costo_equipo, gastos_generales, margen_ganancia) {
+        console.log("🔍 Modelo update recibe:", { id, total, estado, costo_equipo, gastos_generales, margen_ganancia });
+        const estadoParsed = parseInt(estado, 10);
+        const estadoSanitizado = (estado !== undefined && estado !== null) ? parseInt(estado, 10) : 0;
         const [result] = await pool.query(`
-            UPDATE cotizacion SET total=?, estado=?, costo_equipo=?, gastos_generales=?, margen_ganancia=?
-            WHERE ID_cotizacion = ?
-        `, [total, estado, costo_equipo, gastos_generales, margen_ganancia, id]);
-        return result.affectedRows > 0;
+        UPDATE cotizacion 
+        SET total = ?, estado = ?, costo_equipo = ?, gastos_generales = ?, margen_ganancia = ?
+        WHERE ID_cotizacion = ? AND deleted_at IS NULL
+    `, [total, estadoSanitizado, costo_equipo, gastos_generales, margen_ganancia, id]);
+    return result.affectedRows > 0;
     }
 
     // Soft delete

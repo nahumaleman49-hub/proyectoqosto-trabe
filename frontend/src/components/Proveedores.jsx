@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Package, Search, MapPin, Plus, Edit, Trash2, ArrowLeft, Building, Mail, Phone } from 'lucide-react';
 import api from '../services/api';
+import { isAdmin } from '../utils/auth';
 
 const Proveedores = () => {
     const [proveedores, setProveedores] = useState([]);
@@ -43,6 +44,12 @@ const Proveedores = () => {
         );
         setFiltered(filteredList);
     };
+    
+    const [esAdmin, setEsAdmin] = useState(false);
+    useEffect(() => {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        setEsAdmin(user.role === 'admin');
+    }, []);
 
     const handleDelete = async (id, nombre) => {
         if (!confirm(`¿Eliminar el proveedor "${nombre}"?`)) return;
@@ -57,6 +64,7 @@ const Proveedores = () => {
             console.log(err);
         }
     };
+    const backRoute = isAdmin() ? '/home' : '/dashboard';
 
     if (loading) return <div className="text-center py-20">Cargando proveedores...</div>;
 
@@ -74,9 +82,9 @@ const Proveedores = () => {
             </div>
 
             <div className="container mx-auto px-4 py-8">
-                <Link to="/home" className="inline-flex items-center text-slate-600 hover:text-slate-800 transition-colors mb-8">
+                <Link to={backRoute} className="inline-flex items-center text-slate-600 hover:text-slate-800 transition-colors mb-8">
                     <ArrowLeft size={20} className="mr-2" />
-                    Volver al Inicio
+                    Volver {isAdmin() ? 'al Inicio' : 'al Dashboard'}
                 </Link>
 
                 {success && (
@@ -180,12 +188,14 @@ const Proveedores = () => {
                                         >
                                             Gestionar
                                         </Link>
+                                        {esAdmin &&(
                                         <button
                                             onClick={() => handleDelete(prov.ID_proveedor, prov.nombre)}
                                             className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
                                         >
                                             <Trash2 size={20} />
                                         </button>
+                                        )}
                                     </div>
                                 </div>
                             ))

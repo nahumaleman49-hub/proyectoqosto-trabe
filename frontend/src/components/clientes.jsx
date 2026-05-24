@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Phone, Mail, MapPin, Trash2, Search, UserPlus, ArrowLeft } from 'lucide-react';
 import api from '../services/api';
+import { isAdmin } from '../utils/auth';
+console.log('Rol del usuario:', isAdmin() ? 'admin' : 'user');
 
 const Clientes = () => {
     const [clientes, setClientes] = useState([]);
@@ -10,6 +12,13 @@ const Clientes = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
+    const admin = isAdmin();
+
+    const [esAdmin, setEsAdmin] = useState(false);
+    useEffect(() => {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        setEsAdmin(user.role === 'admin');
+    }, []);
 
     useEffect(() => {
         fetchClientes();
@@ -54,6 +63,8 @@ const Clientes = () => {
         }
     };
 
+    const backRoute = isAdmin() ? '/home' : '/dashboard';
+
     if (loading) {
         return <div className="text-center py-20">Cargando clientes...</div>;
     }
@@ -72,9 +83,9 @@ const Clientes = () => {
             </div>
 
             <div className="container mx-auto px-4 py-8">
-                <Link to="/home" className="inline-flex items-center text-slate-600 hover:text-slate-800 transition-colors mb-8">
+                <Link to={backRoute} className="inline-flex items-center text-slate-600 hover:text-slate-800 transition-colors mb-8">
                     <ArrowLeft size={20} className="mr-2" />
-                    Volver al Inicio
+                    Volver {isAdmin() ? 'al Inicio' : 'al Dashboard'}
                 </Link>
 
                 {successMsg && (
@@ -138,6 +149,12 @@ const Clientes = () => {
                                             <MapPin size={16} className="mr-3 mt-0.5 text-slate-400" />
                                             <span className="line-clamp-2">{cliente.direccion}</span>
                                         </div>
+                                        {/* Solo admin puede eliminar */}
+                                        {esAdmin &&  (
+                                            <button onClick={() => handleDelete(cliente.ID_cliente, cliente.nombre)} className="text-red-600">
+                                            <Trash2 size={18} />
+                                            </button>
+                                        )}
                                     </div>
 
                                     <div className="mt-6 pt-6 border-t border-slate-100">
@@ -158,12 +175,13 @@ const Clientes = () => {
                                     >
                                         Gestionar
                                     </Link>
-                                    <button
-                                        onClick={() => handleDelete(cliente.ID_cliente, cliente.nombre)}
-                                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                    >
-                                        <Trash2 size={20} />
-                                    </button>
+                                    {esAdmin &&(
+                                        <button
+                                            onClick={() => handleDelete(cliente.ID_cliente, cliente.nombre)}
+                                            className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                                            <Trash2 size={20} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))

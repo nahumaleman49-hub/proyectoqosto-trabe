@@ -18,6 +18,7 @@ const Home = () => {
 
     const cards = [
         { to: '/cotizaciones', icon: FileText, title: 'Cotizaciones', desc: 'Obtén estimados de proyectos', gradient: 'from-slate-700 to-slate-800' },
+        { to: '/usuarios', icon: Users, title: 'Usuarios', desc: 'Administra los usuarios del sistema', gradient: 'from-slate-600 to-slate-700' },
         { to: '/proveedores', icon: Package, title: 'Proveedores', desc: 'Encuentra socios confiables', gradient: 'from-slate-600 to-slate-700' },
         { to: '/materiales', icon: Box, title: 'Materiales', desc: 'Explora productos de calidad', gradient: 'from-slate-700 to-slate-800' },
         { to: '/servicios', icon: Briefcase, title: 'Mano de Obra', desc: 'Contrata trabajadores calificados', gradient: 'from-slate-700 to-slate-800' },
