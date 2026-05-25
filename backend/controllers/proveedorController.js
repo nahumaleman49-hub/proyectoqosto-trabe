@@ -29,6 +29,27 @@ const show = async (req, res) => {
 const store = async (req, res) => {
     try {
         const { nombre, nombre_contacto, telefono, correo_e, direccion, tipo } = req.body;
+
+        // Validar teléfono
+if (!/^\d{10}$/.test(telefono)) {
+    return res.status(400).json({
+        message: 'El teléfono debe tener exactamente 10 dígitos'
+    });
+}
+
+// Validar nombre proveedor
+if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
+    return res.status(400).json({
+        message: 'El nombre del proveedor solo puede contener letras'
+    });
+}
+
+// Validar nombre contacto
+if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre_contacto)) {
+    return res.status(400).json({
+        message: 'El nombre del contacto solo puede contener letras'
+    });
+}
         if (!nombre || !nombre_contacto || !telefono || !correo_e || !direccion || !tipo) {
             return res.status(400).json({ message: 'Faltan campos requeridos' });
         }
@@ -56,6 +77,28 @@ const update = async (req, res) => {
         if (!existing) return res.status(404).json({ message: 'Proveedor no encontrado' });
 
         const { nombre, nombre_contacto, telefono, correo_e, direccion, tipo } = req.body;
+
+// Validar teléfono
+if (!/^\d{10}$/.test(telefono)) {
+    return res.status(400).json({
+        message: 'El teléfono debe tener exactamente 10 dígitos'
+    });
+}
+
+// Validar nombre proveedor
+if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
+    return res.status(400).json({
+        message: 'El nombre del proveedor solo puede contener letras'
+    });
+}
+
+// Validar nombre contacto
+if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre_contacto)) {
+    return res.status(400).json({
+        message: 'El nombre del contacto solo puede contener letras'
+    });
+}
+
         // Validaciones de unicidad excluyendo el propio ID
         const nameUnique = await Proveedor.checkUnique('nombre', nombre, id);
         if (!nameUnique) return res.status(409).json({ message: 'El nombre ya existe' });

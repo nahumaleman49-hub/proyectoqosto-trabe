@@ -63,28 +63,93 @@ const ProveedoresForm = () => {
         }
     }, [id, isEditing]);
 
+    /* esto es lo que estoy eliminando para las validaciones de los campos
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
+    */
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
-        try {
-            if (isEditing) {
-                await api.put(`/proveedores/${id}`, formData);
-            } else {
-                await api.post('/proveedores', formData);
-            }
-            navigate('/proveedores');
-        } catch (err) {
-            const msg = err.response?.data?.message || 'Error al guardar proveedor';
-            setError(msg);
-        } finally {
-            setLoading(false);
+const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    // Validación: teléfono solo números y máximo 10
+    if (name === 'telefono') {
+        const onlyNumbers = value.replace(/\D/g, '');
+
+        if (onlyNumbers.length <= 10) {
+            setFormData({
+                ...formData,
+                [name]: onlyNumbers
+            });
         }
-    };
+
+        return;
+    }
+
+    // Validación: nombres solo letras y espacios
+    if (name === 'nombre' || name === 'nombre_contacto') {
+        const onlyLetters = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+
+        setFormData({
+            ...formData,
+            [name]: onlyLetters
+        });
+
+        return;
+    }
+
+    // Campos normales
+    setFormData({
+        ...formData,
+        [name]: value
+    });
+};
+
+ /* hasta aqui es una validacion */
+
+const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setError('');
+
+    // Validar teléfono
+    if (!/^\d{10}$/.test(formData.telefono)) {
+        setError('El teléfono debe tener exactamente 10 dígitos');
+        return;
+    }
+
+    // Validar nombre proveedor
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.nombre)) {
+        setError('El nombre del proveedor solo puede contener letras');
+        return;
+    }
+
+    // Validar nombre contacto
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.nombre_contacto)) {
+        setError('El nombre del contacto solo puede contener letras');
+        return;
+    }
+
+    setLoading(true);
+
+    try {
+        if (isEditing) {
+            await api.put(`/proveedores/${id}`, formData);
+        } else {
+            await api.post('/proveedores', formData);
+        }
+
+        navigate('/proveedores');
+
+    } catch (err) {
+        const msg = err.response?.data?.message || 'Error al guardar proveedor';
+        setError(msg);
+
+    } finally {
+        setLoading(false);
+    }
+};
 
     // Vinculación de material
     const handleVincularMaterial = async (e) => {
