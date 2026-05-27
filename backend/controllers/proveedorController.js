@@ -37,10 +37,10 @@ if (!/^\d{10}$/.test(telefono)) {
     });
 }
 
-// Validar nombre proveedor
-if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
+// Validar nombre proveedor: letras, números y espacios
+if (!/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
     return res.status(400).json({
-        message: 'El nombre del proveedor solo puede contener letras'
+        message: 'El nombre del proveedor solo puede contener letras y números'
     });
 }
 
@@ -85,10 +85,10 @@ if (!/^\d{10}$/.test(telefono)) {
     });
 }
 
-// Validar nombre proveedor
-if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
+// Validar nombre proveedor: letras, números y espacios
+if (!/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
     return res.status(400).json({
-        message: 'El nombre del proveedor solo puede contener letras'
+        message: 'El nombre del proveedor solo puede contener letras y números'
     });
 }
 

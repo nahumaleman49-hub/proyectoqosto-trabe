@@ -39,43 +39,70 @@ const UsuariosForm = () => {
         }
     }, [id, isEditing]);
 
+    //modificado handleChange
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+    const { name, value } = e.target;
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
+    // Nombre: solo letras y espacios
+    if (name === 'name') {
+        const onlyLetters = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
 
-        if (!isEditing && formData.password !== formData.password_confirmation) {
-            setError('Las contraseñas no coinciden');
-            setLoading(false);
-            return;
+        setFormData({
+            ...formData,
+            [name]: onlyLetters
+        });
+
+        return;
+    }
+
+    setFormData({
+        ...formData,
+        [name]: value
+    });
+};
+
+   const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.name)) {
+        setError('El nombre solo puede contener letras');
+        setLoading(false);
+        return;
+    }
+
+    if (!isEditing && formData.password !== formData.password_confirmation) {
+        setError('Las contraseñas no coinciden');
+        setLoading(false);
+        return;
+    }
+
+    try {
+        const payload = {
+            name: formData.name,
+            email: formData.email || null,
+            role: formData.role,
+        };
+
+        if (formData.password) {
+            payload.password = formData.password;
         }
 
-        try {
-            const payload = {
-                name: formData.name,
-                email: formData.email || null,
-                role: formData.role,
-            };
-            if (formData.password) {
-                payload.password = formData.password;
-            }
-            if (isEditing) {
-                await api.put(`/users/${id}`, payload);
-            } else {
-                await api.post('/users', payload);
-            }
-            navigate('/usuarios');
-        } catch (err) {
-            const msg = err.response?.data?.message || 'Error al guardar usuario';
-            setError(msg);
-        } finally {
-            setLoading(false);
+        if (isEditing) {
+            await api.put(`/users/${id}`, payload);
+        } else {
+            await api.post('/users', payload);
         }
-    };
+
+        navigate('/usuarios');
+    } catch (err) {
+        const msg = err.response?.data?.message || 'Error al guardar usuario';
+        setError(msg);
+    } finally {
+        setLoading(false);
+    }
+};
 
     if (fetchLoading) return <div className="text-center py-20">Cargando...</div>;
 

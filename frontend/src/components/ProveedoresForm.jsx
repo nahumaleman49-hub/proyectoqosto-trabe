@@ -73,7 +73,7 @@ const ProveedoresForm = () => {
 const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Validación: teléfono solo números y máximo 10
+    // Teléfono: solo números y máximo 10
     if (name === 'telefono') {
         const onlyNumbers = value.replace(/\D/g, '');
 
@@ -87,8 +87,20 @@ const handleChange = (e) => {
         return;
     }
 
-    // Validación: nombres solo letras y espacios
-    if (name === 'nombre' || name === 'nombre_contacto') {
+    // Nombre de empresa: letras, números y espacios
+    if (name === 'nombre') {
+        const lettersNumbers = value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, '');
+
+        setFormData({
+            ...formData,
+            [name]: lettersNumbers
+        });
+
+        return;
+    }
+
+    // Nombre de contacto: solo letras y espacios
+    if (name === 'nombre_contacto') {
         const onlyLetters = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
 
         setFormData({
@@ -99,7 +111,6 @@ const handleChange = (e) => {
         return;
     }
 
-    // Campos normales
     setFormData({
         ...formData,
         [name]: value
@@ -120,10 +131,10 @@ const handleSubmit = async (e) => {
     }
 
     // Validar nombre proveedor
-    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.nombre)) {
-        setError('El nombre del proveedor solo puede contener letras');
-        return;
-    }
+   if (!/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.nombre)) {
+    setError('El nombre del proveedor solo puede contener letras y números');
+    return;
+}
 
     // Validar nombre contacto
     if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.nombre_contacto)) {

@@ -28,9 +28,25 @@ const store = async (req, res) => {
     try {
         const { nombre, telefono, direccion, email } = req.body;
         // Validaciones de presencia
-        if (!nombre || !telefono || !direccion || !email) {
-            return res.status(400).json({ message: 'Todos los campos son requeridos' });
-        }
+       if (!nombre || !telefono || !direccion || !email) {
+    return res.status(400).json({
+        message: 'Todos los campos son requeridos'
+    });
+}
+
+// Nombre solo letras
+if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
+    return res.status(400).json({
+        message: 'El nombre solo puede contener letras'
+    });
+}
+
+// Teléfono exactamente 10 dígitos
+if (!/^\d{10}$/.test(telefono)) {
+    return res.status(400).json({
+        message: 'El teléfono debe tener exactamente 10 dígitos'
+    });
+}  //modificado fin
 
         // Validaciones de unicidad
         const nameUnique = await Cliente.checkUnique('nombre', nombre);
@@ -53,9 +69,31 @@ const store = async (req, res) => {
 const update = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, telefono, direccion, email } = req.body;
-        const existing = await Cliente.getById(id);
-        if (!existing) return res.status(404).json({ message: 'Cliente no encontrado' });
+       const { nombre, telefono, direccion, email } = req.body;
+
+// Validaciones de presencia
+if (!nombre || !telefono || !direccion || !email) {
+    return res.status(400).json({
+        message: 'Todos los campos son requeridos'
+    });
+}
+
+// Nombre solo letras
+if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
+    return res.status(400).json({
+        message: 'El nombre solo puede contener letras'
+    });
+}
+
+// Teléfono exactamente 10 dígitos
+if (!/^\d{10}$/.test(telefono)) {
+    return res.status(400).json({
+        message: 'El teléfono debe tener exactamente 10 dígitos'
+    });
+}
+
+const existing = await Cliente.getById(id);
+if (!existing) return res.status(404).json({ message: 'Cliente no encontrado' });
 
         // Validaciones de unicidad excluyendo el propio ID
         const nameUnique = await Cliente.checkUnique('nombre', nombre, id);

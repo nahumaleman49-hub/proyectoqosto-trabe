@@ -35,39 +35,111 @@ const ClientesForm = () => {
         }
     }, [id, isEditing]);
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-        if (errors[e.target.name]) {
-            setErrors({ ...errors, [e.target.name]: '' });
-        }
-    };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setErrors({});
-        try {
-            if (isEditing) {
-                await api.put(`/clientes/${id}`, formData);
-            } else {
-                await api.post('/clientes', formData);
-            }
-            navigate('/clientes');
-        } catch (err) {
-            if (err.response && err.response.status === 409) {
-                const msg = err.response.data.message;
-                if (msg.includes('nombre')) setErrors({ nombre: msg });
-                else if (msg.includes('teléfono')) setErrors({ telefono: msg });
-                else if (msg.includes('email')) setErrors({ email: msg });
-                else setErrors({ general: msg });
-            } else {
-                setErrors({ general: 'Error al guardar el cliente' });
-            }
-            console.error(err);
-        } finally {
-            setLoading(false);
+    //Validacion de numero y nombre
+    const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    // Nombre: solo letras y espacios
+    if (name === 'nombre') {
+        const onlyLetters = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+
+        setFormData({
+            ...formData,
+            [name]: onlyLetters
+        });
+
+    // Teléfono: solo números y máximo 10
+    } else if (name === 'telefono') {
+
+        const onlyNumbers = value.replace(/\D/g, '');
+
+        if (onlyNumbers.length <= 10) {
+            setFormData({
+                ...formData,
+                [name]: onlyNumbers
+            });
         }
-    };
+
+    } else {
+
+        setFormData({
+            ...formData,
+            [name]: value
+        });
+    }
+
+    if (errors[name]) {
+        setErrors({
+            ...errors,
+            [name]: ''
+        });
+    }
+};
+
+//modificado ini
+const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setErrors({});
+
+    // Validar nombre solo letras
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.nombre)) {
+        setErrors({
+            nombre: 'El nombre solo puede contener letras'
+        });
+        return;
+    }
+
+    // Validar teléfono exactamente 10 dígitos
+    if (!/^\d{10}$/.test(formData.telefono)) {
+        setErrors({
+            telefono: 'El teléfono debe tener exactamente 10 dígitos'
+        });
+        return;
+    }
+
+    setLoading(true);
+
+    try {
+        if (isEditing) {
+            await api.put(`/clientes/${id}`, formData);
+        } else {
+            await api.post('/clientes', formData);
+        }
+
+        navigate('/clientes');
+
+    } catch (err) {
+
+        if (err.response && err.response.status === 409) {
+            const msg = err.response.data.message;
+
+            if (msg.includes('nombre')) {
+                setErrors({ nombre: msg });
+
+            } else if (msg.includes('teléfono')) {
+                setErrors({ telefono: msg });
+
+            } else if (msg.includes('email')) {
+                setErrors({ email: msg });
+
+            } else {
+                setErrors({ general: msg });
+            }
+
+        } else {
+            setErrors({
+                general: 'Error al guardar el cliente'
+            });
+        }
+
+        console.error(err);
+
+    } finally {
+        setLoading(false);
+    }
+}; //fin modificado 
 
     if (fetchLoading) return <div className="text-center py-20">Cargando datos...</div>;
 
