@@ -23,41 +23,114 @@ const show = async (req, res) => {
     }
 };
 
+
+//store modificado
 const store = async (req, res) => {
     try {
         const { nombre, fk_id_cliente, estado, fecha_ini, fecha_fin, presupuesto } = req.body;
+
+        // Validar campos requeridos
         if (!nombre || !fk_id_cliente || estado === undefined || !fecha_ini || presupuesto === undefined) {
-            return res.status(400).json({ message: 'Faltan campos requeridos' });
+            return res.status(400).json({
+                message: 'Faltan campos requeridos'
+            });
         }
+
+        // Validar fechas
+        if (fecha_fin && fecha_fin < fecha_ini) {
+            return res.status(400).json({
+                message: 'La fecha de fin no puede ser anterior a la fecha de inicio'
+            });
+        }
+
         const cliente = await Cliente.getById(fk_id_cliente);
-        if (!cliente) return res.status(404).json({ message: 'Cliente no encontrado' });
 
-        const newId = await Proyecto.create({ nombre, fk_id_cliente, estado, fecha_ini, fecha_fin, presupuesto });
+        if (!cliente) {
+            return res.status(404).json({
+                message: 'Cliente no encontrado'
+            });
+        }
+
+        const newId = await Proyecto.create({
+            nombre,
+            fk_id_cliente,
+            estado,
+            fecha_ini,
+            fecha_fin,
+            presupuesto
+        });
+
         const newProyecto = await Proyecto.getById(newId);
-        res.status(201).json(newProyecto);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error al crear proyecto' });
-    }
-};
 
+        res.status(201).json(newProyecto);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            message: 'Error al crear proyecto'
+        });
+    }
+};  
+
+//update modificado
 const update = async (req, res) => {
     try {
+
         const { id } = req.params;
+
         const { nombre, fk_id_cliente, estado, fecha_ini, fecha_fin, presupuesto } = req.body;
+
+        // Validar fechas
+        if (fecha_fin && fecha_fin < fecha_ini) {
+            return res.status(400).json({
+                message: 'La fecha de fin no puede ser anterior a la fecha de inicio'
+            });
+        }
+
         const existing = await Proyecto.getById(id);
-        if (!existing) return res.status(404).json({ message: 'Proyecto no encontrado' });
+
+        if (!existing) {
+            return res.status(404).json({
+                message: 'Proyecto no encontrado'
+            });
+        }
 
         const cliente = await Cliente.getById(fk_id_cliente);
-        if (!cliente) return res.status(404).json({ message: 'Cliente no encontrado' });
 
-        const updated = await Proyecto.update(id, { nombre, fk_id_cliente, estado, fecha_ini, fecha_fin, presupuesto });
-        if (!updated) return res.status(400).json({ message: 'No se pudo actualizar' });
+        if (!cliente) {
+            return res.status(404).json({
+                message: 'Cliente no encontrado'
+            });
+        }
+
+        const updated = await Proyecto.update(id, {
+            nombre,
+            fk_id_cliente,
+            estado,
+            fecha_ini,
+            fecha_fin,
+            presupuesto
+        });
+
+        if (!updated) {
+            return res.status(400).json({
+                message: 'No se pudo actualizar'
+            });
+        }
+
         const updatedProyecto = await Proyecto.getById(id);
+
         res.json(updatedProyecto);
+
     } catch (error) {
+
         console.error(error);
-        res.status(500).json({ message: 'Error al actualizar proyecto' });
+
+        res.status(500).json({
+            message: 'Error al actualizar proyecto'
+        });
     }
 };
 

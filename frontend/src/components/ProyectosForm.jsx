@@ -62,24 +62,32 @@ const ProyectosForm = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
-        try {
-            if (isEditing) {
-                await api.put(`/proyectos/${id}`, formData);
-            } else {
-                await api.post('/proyectos', formData);
-            }
-            navigate('/proyectos');
-        } catch (err) {
-            const msg = err.response?.data?.message || 'Error al guardar proyecto';
-            setError(msg);
-        } finally {
-            setLoading(false);
+    //handle modificado
+   const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (formData.fecha_fin && formData.fecha_fin < formData.fecha_ini) {
+        setError('La fecha de fin no puede ser anterior a la fecha de inicio');
+        return;
+    }
+
+    setLoading(true);
+
+    try {
+        if (isEditing) {
+            await api.put(`/proyectos/${id}`, formData);
+        } else {
+            await api.post('/proyectos', formData);
         }
-    };
+        navigate('/proyectos');
+    } catch (err) {
+        const msg = err.response?.data?.message || 'Error al guardar proyecto';
+        setError(msg);
+    } finally {
+        setLoading(false);
+    }
+};
 
     if (fetchLoading) return <div className="text-center py-20">Cargando datos...</div>;
 
@@ -175,6 +183,8 @@ const ProyectosForm = () => {
                                 value={formData.fecha_fin}
                                 onChange={handleChange}
                                 className="w-full px-4 py-3 border border-slate-300 rounded-lg"
+                                min={formData.fecha_ini}
+
                             />
                         </div>
 
