@@ -18,10 +18,16 @@ router.get('/proveedores-por-servicio/:servId', cotizacionController.getProveedo
 
 // CRUD
 router.get('/', cotizacionController.index);
-router.post('/', cotizacionController.store);
-router.get('/:id', cotizacionController.show);
-router.put('/:id', cotizacionController.update);
-router.delete('/:id', cotizacionController.destroy);
 
+router.post('/', cotizacionController.store);
+
+// para generar PDF
+router.get('/:id/pdf', cotizacionController.generarPDF);
+
+router.get('/:id', cotizacionController.show);
+
+router.put('/:id', cotizacionController.update);
+
+router.delete('/:id', cotizacionController.destroy);
 
 module.exports = router;

@@ -5,6 +5,7 @@ const Cliente = require('../models/Cliente');
 const DetalleMaterial = require('../models/DetalleMaterial');
 const DetalleServicio = require('../models/DetalleServicio');
 const pool = require('../config/db');
+const PDFDocument = require('pdfkit'); //para hacer PDFs
 
 // Listar cotizaciones
 const index = async (req, res) => {
@@ -423,9 +424,126 @@ const getCategoriasServicios = async (req, res) => {
     }
 };
 
+//generar los PDFs
+const generarPDF = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const cotizacion = await Cotizacion.getById(id);
+
+        if (!cotizacion) {
+            return res.status(404).json({ message: 'Cotización no encontrada' });
+        }
+
+        const doc = new PDFDocument({ margin: 40, size: 'A4' });
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=cotizacion-${id}.pdf`);
+
+        doc.pipe(res);
+
+        // ENCABEZADO
+        doc.rect(0, 0, doc.page.width, 90).fill('#1e3a5f');
+
+        doc.fillColor('#ffffff')
+            .fontSize(24)
+            .text('TRABE', 40, 25);
+
+        doc.fontSize(10)
+            .fillColor('#cbd5e1')
+            .text('Construcciones & Proyectos', 40, 55);
+
+        doc.fillColor('#ffffff')
+            .fontSize(18)
+            .text(`Cotización #${String(id).padStart(4, '0')}`, 350, 25, {
+                align: 'right'
+            });
+
+        doc.fontSize(10)
+            .fillColor('#cbd5e1')
+            .text(new Date(cotizacion.fecha).toLocaleDateString('es-MX'), 350, 55, {
+                align: 'right'
+            });
+
+        doc.moveDown(4);
+
+        // DATOS GENERALES
+        doc.fillColor('#1e293b')
+            .fontSize(14)
+            .text('Datos de la Cotización', 40, 120);
+
+        doc.moveTo(40, 142)
+            .lineTo(555, 142)
+            .strokeColor('#1e3a5f')
+            .lineWidth(1.5)
+            .stroke();
+
+        doc.fontSize(11).fillColor('#334155');
+
+        doc.text(`Proyecto: ${cotizacion.proyecto_nombre || 'N/A'}`, 40, 160);
+        doc.text(`Cliente: ${cotizacion.cliente_nombre || 'N/A'}`, 40, 180);
+        doc.text(`Fecha: ${new Date(cotizacion.fecha).toLocaleDateString('es-MX')}`, 40, 200);
+        doc.text(`Estado: ${cotizacion.estado == 1 ? 'Aprobada' : 'Borrador'}`, 40, 220);
+
+        // TABLA RESUMEN
+        let y = 270;
+
+        doc.fillColor('#1e3a5f')
+            .fontSize(14)
+            .text('Resumen', 40, y);
+
+        y += 25;
+
+        doc.rect(40, y, 515, 25).fill('#1e3a5f');
+        doc.fillColor('#ffffff').fontSize(10);
+        doc.text('Concepto', 50, y + 8);
+        doc.text('Importe', 450, y + 8);
+
+        y += 25;
+
+        const total = Number(cotizacion.total || 0);
+
+        doc.rect(40, y, 515, 30).fill('#f8fafc');
+        doc.fillColor('#334155').fontSize(11);
+        doc.text('Total de cotización', 50, y + 10);
+        doc.text(`$${total.toFixed(2)}`, 450, y + 10);
+
+        y += 50;
+
+        // TOTAL FINAL
+        doc.rect(330, y, 225, 45).fill('#1e3a5f');
+        doc.fillColor('#ffffff')
+            .fontSize(13)
+            .text('TOTAL', 350, y + 10);
+
+        doc.fontSize(16)
+            .text(`$${total.toFixed(2)}`, 430, y + 10, {
+                align: 'right'
+            });
+
+        // PIE DE PÁGINA
+        doc.fontSize(8)
+            .fillColor('#94a3b8')
+            .text(
+                `Trabe Construcciones — Documento generado el ${new Date().toLocaleDateString('es-MX')}`,
+                40,
+                760
+            );
+
+        doc.text(`Cotización #${id}`, 450, 760, {
+            align: 'right'
+        });
+
+        doc.end();
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al generar PDF' });
+    }
+};
+
 module.exports = {
     index, show, store, update, destroy,
-    getClientes, getProyectos, getProyectoData,
+    generarPDF, getClientes, getProyectos, getProyectoData,
     getMaterialesPorCategoria, getProveedoresPorMaterial,
     getServiciosPorCategoria, getProveedoresPorServicio,
     getCategoriasMateriales, getCategoriasServicios

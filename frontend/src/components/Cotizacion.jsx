@@ -42,6 +42,28 @@ const Cotizaciones = () => {
         return <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${clases[estado] || clases[0]}`}>{estados[estado] || 'Desconocido'}</span>;
     };
 
+    const descargarPDF = async (id) => {
+    try {
+        const response = await api.get(`/cotizaciones/${id}/pdf`, {
+            responseType: 'blob'
+        });
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.setAttribute('download', `cotizacion-${id}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+    } catch (err) {
+        console.error(err);
+        alert('Error al generar PDF');
+    }
+};
+
+
     const backRoute = isAdmin() ? '/home' : '/dashboard';
 
     if (loading) return <div className="text-center py-20">Cargando cotizaciones...</div>;
@@ -106,8 +128,12 @@ const Cotizaciones = () => {
                                                 <Link to={`/cotizaciones/${cot.ID_cotizacion}/editar`} className="text-slate-400 hover:text-blue-600" title="Editar">
                                                     <Edit size={20} />
                                                 </Link>
-                                                <button className="text-slate-400 hover:text-red-600" title="PDF (próximamente)">
-                                                    <FileDown size={20} />
+                                                <button
+                                                 onClick={() => descargarPDF(cot.ID_cotizacion)}
+                                                 className="text-slate-400 hover:text-red-600"
+                                                  title="Descargar PDF"
+                                                >
+                                                 <FileDown size={20} />
                                                 </button>
                                             </div>
                                         </td>
